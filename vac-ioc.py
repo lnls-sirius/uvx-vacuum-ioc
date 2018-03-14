@@ -20,7 +20,7 @@ prefix = "VAC:"
 pvs = {}
 
 for key in group.keys ():
-    pvs[group[key][0]] = {"type" : "float", "unit" : "pbar", "precision" : 3}
+    pvs[group[key][0]] = {"type" : "float", "unit" : "pbar", "prec" : 3}
 
 # This class inherits from Driver
 class VacuumDriver(Driver):
