@@ -1,0 +1,16 @@
+[Unit]
+Description=Vacuum OPR3 Spy
+After=network.target
+
+[Service]
+Restart=on-failure
+RestartSec=3
+Type=simple
+ExecStart=/usr/bin/python /root/vacuum/vac-ioc.py
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
+
+
