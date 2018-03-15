@@ -40,9 +40,12 @@ class VacuumDriver(Driver):
 
     def scan (self):
 
+        next_command = False
+
         while True:
 
-            c = self.serial.read ()
+            if not next_command:
+               c = self.serial.read ()
 
             if c == "$":
 
@@ -53,28 +56,37 @@ class VacuumDriver(Driver):
 
                 print (id, ch)
 
+                # discards CR
+                self.serial.read ()
+
                 if (id, ch) in group.keys ():
 
-                    # discards CR
-                    self.serial.read ()
-
                     # reads pressure                  
-                    s = ""
                     c = self.serial.read ()
-                    while c != '\x0d':
 
-                       s = s + c
-                       c = self.serial.read ()
+                    if c == "$":
+                        # Not reading data but next command already
+                        next_command = True
 
-                    print s
+                    else:
 
-                    try:
-                        self.setParam(group [(id, ch)][0], float (s) * 1e9)
-                        print str (float (s) * 1e9)
-                    except ValueError:
-                        print "Not a number read = " + s
+                        next_command = False
 
-                    self.updatePVs()
+                        s = ""
+
+                        while c != '\x0d':
+
+                            s = s + c
+                            c = self.serial.read ()
+
+                        print s
+
+                        try:
+                            self.setParam(group [(id, ch)][0], float (s) * 1e9)
+                            print str (float (s) * 1e9)
+                            self.updatePVs()
+                        except ValueError:
+                            print "Not a number read = " + s
 
 # Main function. Instantiates a new server and a new driver.
 if __name__ == "__main__":
