@@ -1,6 +1,11 @@
+import datetime
+import logging
+import time
 import serial
 import threading
 from pcaspy import Driver, Alarm, Severity, SimpleServer
+
+logging.basicConfig(filename='/root/vacuum/vac.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
 
 group = { ("A","R1") : ("Canhao", "LMV_01A"), ("A", "R2") : ("Tripleto", "LMV_03A"), ("A", "R4") : ("Espectrometro", "LMV_05A"), \
           ("D","R1") : ("AEB09B", "AMV_09B"), ("D", "R2") : ("AEB10B"  , "AMV_10A"), ("D", "R4") : ("ADI11", "AMV_11C"), \
@@ -42,6 +47,11 @@ class VacuumDriver(Driver):
 
         next_command = False
 
+	timestamps = {}
+
+        for key in group.keys ():
+            timestamps [key] = 0
+
         while True:
 
             if not next_command:
@@ -82,9 +92,17 @@ class VacuumDriver(Driver):
                         print s
 
                         try:
-                            self.setParam(group [(id, ch)][0], float (s) * 1e9)
-                            print str (float (s) * 1e9)
-                            self.updatePVs()
+
+                            ts = time.time ()
+
+                            if (ts - timestamps [(id, ch)]) > 20:
+                                self.setParam(group [(id, ch)][0], float (s) * 1e9)
+                                logging.info (str((id, ch)) + " - " + str (float (s) * 1e9))
+                                self.updatePVs()
+                                timestamps [(id, ch)] = ts
+                            else:
+                                logging.warning(str((id, ch)) + " - Trying to set a PV in less than 20 seconds!")
+
                         except ValueError:
                             print "Not a number read = " + s
 
